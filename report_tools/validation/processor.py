@@ -123,7 +123,7 @@ def process_folder(input_folder, output_base=config.OUTPUT_DIR, move_files=False
                 log.write(f"❌ INVALID: {file_path.name} ({word_count} words)\n")
                 log.write(f"  Errors: {', '.join(error_codes)}\n")
                 # Use ERROR level for better visibility
-                logging.error(f"INVALID: {file_path.name} - Errors: {error_codes}")
+                logging.debug(f"INVALID: {file_path.name} - Errors: {error_codes}")
     
     # Calculate word count statistics
     word_stats = reporting.calculate_word_statistics(word_counts)

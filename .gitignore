@@ -6,6 +6,13 @@ __pycache__/
 # OS files
 .DS_Store
 
-# Logs and output
-_logs/
+# Output directories
 _out/
+_logs/
+
+# Configuration files (generally user-specific)
+# config/org_config.md
+config/config_loc.py
+
+# Logs
+_logs/*.log

@@ -5,20 +5,42 @@ import logging
 from pathlib import Path
 import config.config as config
 
-def setup_logger(log_file=config.LOG_FILE):
-    """Configure logging to file and console."""
-    # Make sure log directory exists
-    os.makedirs(os.path.dirname(log_file), exist_ok=True)
+def setup_logger(log_file=config.LOG_FILE, console_level=logging.WARNING):
+    """
+    Set up logging to both console and file.
     
-    # Configure logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(log_file),
-            logging.StreamHandler()
-        ]
-    )
+    Args:
+        log_file: Path to log file
+        console_level: Logging level for console output (default: WARNING)
+    """
+    # Create log directory if it doesn't exist
+    log_dir = Path(log_file).parent
+    if not log_dir.exists():
+        log_dir.mkdir(parents=True)
+        
+    # Configure root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)  # Capture all logs to file
+    
+    # Clear any existing handlers
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+    
+    # File handler - logs everything to file
+    file_handler = logging.FileHandler(log_file)
+    file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(file_formatter)
+    file_handler.setLevel(logging.DEBUG)
+    root_logger.addHandler(file_handler)
+    
+    # Console handler - only warnings and above by default
+    console_handler = logging.StreamHandler()
+    console_formatter = logging.Formatter('%(message)s')
+    console_handler.setFormatter(console_formatter)
+    console_handler.setLevel(console_level)
+    root_logger.addHandler(console_handler)
+    
+    return root_logger
 
 def get_ignored_directories(base_dir, context="validation"):
     """
