@@ -69,10 +69,10 @@ def run_validation(args):
     valid, invalid, ignored_files, error_counter, word_stats, corrections = process_folder(
         args.input,
         output_base=args.output,
-        move_files=args.move,
-        analyze_only=args.analyze_only,
-        strict=args.strict,
-        show_valid=args.show_valid,
+        move_files=config.MOVE_FILES,           # Use config default
+        analyze_only=config.ANALYZE_ONLY,       # Use config default  
+        strict=config.STRICT_VALIDATION,        # Use config default
+        show_valid=config.SHOW_VALID_REPORTS,   # Use config default
         auto_correct=auto_correct
     )
     
@@ -86,17 +86,18 @@ def run_validation(args):
 
     # Updated console output
     print(f"\nProcessing complete! Valid Service: {valid_service_count}, Valid PM: {valid_pm_count}, Invalid: {invalid}")
-    
-    if valid_service_count > 0:
-        print(f"Valid reports average length: {word_stats['valid']['mean']:.1f} words (range: {word_stats['valid']['min']} to {word_stats['valid']['max']} words)")
-    
+
+    # Fixed word stats output - use the correct structure
+    if valid > 0:
+        print(f"Valid reports average length: {word_stats['valid']['average']:.1f} words (range: {word_stats['valid']['min']} to {word_stats['valid']['max']} words)")
+
     if invalid > 0:
-        print(f"Invalid reports average length: {word_stats['invalid']['mean']:.1f} words (range: {word_stats['invalid']['min']} to {word_stats['invalid']['max']} words)")
-    
+        print(f"Invalid reports average length: {word_stats['invalid']['average']:.1f} words (range: {word_stats['invalid']['min']} to {word_stats['invalid']['max']} words)")
+
     # Add a newline before file references
     print("")
     
-    if valid_service_count + invalid > 0:
+    if valid + invalid > 0:
         print(f"See {config.SUMMARY_LOG} for details")
         print(f"Word count analysis in {config.WORD_COUNT_CSV}")
         print(f"Error frequency analysis in {config.ERROR_SUMMARY}")

@@ -12,6 +12,14 @@ def main():
                         help=f'Input folder containing markdown reports')
     parser.add_argument('--output', default=config.OUTPUT_DIR, 
                         help=f'Base output folder')
+    parser.add_argument('--move', action='store_true', default=False,
+                        help='Move files instead of copying them')
+    parser.add_argument('--analyze-only', action='store_true', default=config.ANALYZE_ONLY,
+                        help='Analyze only, do not move/copy files')
+    parser.add_argument('--strict', action='store_true', default=config.STRICT_VALIDATION,
+                        help='Use strict validation')
+    parser.add_argument('--show-valid', action='store_true', default=config.SHOW_VALID_REPORTS,
+                        help='Show valid reports in output')
     
     args = parser.parse_args()
     
