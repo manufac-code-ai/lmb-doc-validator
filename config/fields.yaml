@@ -66,3 +66,34 @@ fields:
       - "Follow-up actions"
       - "Recommended next steps"
     question_mark: true
+
+  # PM-SPECIFIC FIELDS
+  description_of_service:
+    display: "Description of service"
+    canonical: "**Description of service:**"
+    semantic_alternatives:
+      - "Service description"
+      - "Type of service"
+      - "Service performed"
+      - "Maintenance type"
+      - "PM service"
+  
+  service_completed:
+    display: "Service completed"
+    canonical: "**Service completed?**"
+    semantic_alternatives:
+      - "Maintenance performed"
+      - "PM completed"
+      - "Work completed"
+      - "Service performed"
+    question_mark: true
+  
+  maintenance_performed:
+    display: "Maintenance performed"
+    canonical: "**Maintenance performed?**"
+    semantic_alternatives:
+      - "PM performed"
+      - "Service completed"
+      - "Maintenance completed"
+      - "Preventive maintenance performed"
+    question_mark: true

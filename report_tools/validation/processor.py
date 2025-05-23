@@ -33,7 +33,7 @@ def process_folder(input_folder, output_base=config.OUTPUT_DIR, move_files=False
     
     if not markdown_files:
         print(f"No markdown files found in {input_folder}{' or its subdirectories' if config.RECURSIVE_SEARCH else ''}")
-        return 0, 0, 0, {}, {}
+        return 0, 0, 0, {}, {}, 0
     
     # Create output directories with validated subdirectory
     validated_dir = Path(output_base) / config.VALIDATED_DIR
@@ -63,7 +63,7 @@ def process_folder(input_folder, output_base=config.OUTPUT_DIR, move_files=False
     }
     file_word_counts = {}
     
-    # Add another counter inside the function:
+    # Counter for auto-corrections
     total_corrections = 0
     
     with open(config.SUMMARY_LOG, 'w', encoding='utf-8') as log:
@@ -87,7 +87,7 @@ def process_folder(input_folder, output_base=config.OUTPUT_DIR, move_files=False
                 file_word_counts[file_path.name] = word_count
             
             # Validate the report
-            is_valid, error_codes, corrected_content = validate_report(file_path, strict=strict, auto_correct=auto_correct)
+            is_valid, error_codes, corrected_content, doc_type = validate_report(file_path, strict=strict, auto_correct=auto_correct)
             
             # Store the file's error codes for summary
             file_errors[file_path.name] = error_codes
@@ -100,56 +100,53 @@ def process_folder(input_folder, output_base=config.OUTPUT_DIR, move_files=False
                 valid_files += 1
                 word_counts["valid"].append(word_count)
                 
-                # Only move/copy if not in analyze-only mode
-                if not analyze_only:
-                    destination = valid_dir / file_path.name
-                    if move_files:
-                        shutil.move(str(file_path), str(destination))
-                    else:
-                        shutil.copy2(str(file_path), str(destination))
+                # Determine output directory based on document type
+                if doc_type == "pm_report":
+                    output_dir = os.path.join(output_base, config.VALIDATED_DIR, "valid PM")
+                else:
+                    output_dir = os.path.join(output_base, config.VALIDATED_DIR, "valid")
                 
-                # Still write to the log file but conditionally print to console
+                # Create the output directory
+                os.makedirs(output_dir, exist_ok=True)
+                
                 log.write(f"✅ VALID: {file_path.name} ({word_count} words)\n")
                 if show_valid:
                     logging.info(f"Valid report: {file_path.name}")
+                    
             else:
                 invalid_files += 1
                 word_counts["invalid"].append(word_count)
                 
-                # Only move/copy if not in report-only mode
-                if not analyze_only:
-                    destination = invalid_dir / file_path.name
-                    if move_files:
-                        shutil.move(str(file_path), str(destination))
-                    else:
-                        shutil.copy2(str(file_path), str(destination))
+                output_dir = os.path.join(output_base, config.VALIDATED_DIR, "invalid")
+                
+                # Create the output directory
+                os.makedirs(output_dir, exist_ok=True)
                 
                 log.write(f"❌ INVALID: {file_path.name} ({word_count} words)\n")
                 log.write(f"  Errors: {', '.join(error_codes)}\n")
-                # Use ERROR level for better visibility
                 logging.debug(f"INVALID: {file_path.name} - Errors: {error_codes}")
             
-            # After validation, save corrected content if needed (around line 79):
-            if auto_correct and corrected_content and corrected_content != content:
-                # Count the correction
-                total_corrections += 1
+            # Handle file copying/moving and auto-correction
+            if not analyze_only:
+                destination = Path(output_dir) / file_path.name
                 
-                # If not in report-only mode, write corrected file directly
-                if not analyze_only:
-                    # Write corrected content when moving/copying
+                # Check if we need to write corrected content
+                if auto_correct and corrected_content and corrected_content != content:
+                    total_corrections += 1
+                    # Write corrected content directly
                     with open(destination, 'w', encoding='utf-8') as f:
                         f.write(corrected_content)
                 else:
-                    # Even in report-only mode, log that corrections were found
-                    logging.info(f"Corrections available for {file_path.name}")
-            else:
-                # Use normal copy/move if no corrections or auto-correct disabled
-                if not analyze_only:
-                    destination = valid_dir / file_path.name if is_valid else invalid_dir / file_path.name
+                    # Normal copy/move operation
                     if move_files:
                         shutil.move(str(file_path), str(destination))
                     else:
                         shutil.copy2(str(file_path), str(destination))
+            else:
+                # In analyze-only mode, just count corrections
+                if auto_correct and corrected_content and corrected_content != content:
+                    total_corrections += 1
+                    logging.info(f"Corrections available for {file_path.name}")
     
     # Calculate word count statistics
     word_stats = reporting.calculate_word_statistics(word_counts)
@@ -157,5 +154,4 @@ def process_folder(input_folder, output_base=config.OUTPUT_DIR, move_files=False
     # Generate reporting files
     reporting.write_summary_files(file_errors, file_word_counts, word_stats, error_counter)
     
-    # Update the return value to include corrections (at end of function):
     return valid_files, invalid_files, ignored_files, error_counter, word_stats, total_corrections

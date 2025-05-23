@@ -1,47 +1,9 @@
-# Auto-correction rules for document formatting
-correction_rules:
-  missing_colon:
-    description: "Bold field name missing colon"
-    pattern: "**{field_name}**"
-    replacement: "**{field_name}:**"
-    priority: 1
-  
-  colon_outside_bold:
-    description: "Colon outside bold formatting"
-    pattern: "**{field_name}**:"
-    replacement: "**{field_name}:**"
-    priority: 2
-  
-  whitespace_after_header:
-    description: "Extra whitespace after field header"
-    pattern: "**{field_name}:**  "
-    replacement: "**{field_name}:** "
-    priority: 3
-  
-  question_outside_bold:
-    description: "Question mark outside bold formatting"
-    pattern: "**{field_name}**?"
-    replacement: "**{field_name}?**"
-    priority: 4
-  
-  missing_asterisks:
-    description: "Missing bold formatting entirely"
-    pattern: "{field_name}:"
-    replacement: "**{field_name}:**"
-    priority: 5
-
-  lowercase_field:
-    description: "Field name in lowercase"
-    pattern: "**{lowercase_field_name}:**"
-    replacement: "**{field_name}:**"
-    priority: 6
-
-# Field formatting definition - fundamental approach
+# Auto-correction rules for document formatting - Principled Approach
 field_format:
   # Standard correct format for fields
   standard_format: "**{field_name}{delimiter}**"
   
-  # Field identification pattern
+  # Field identification pattern - captures any field-like text
   field_pattern: "^\\s*((?:\\*\\*)?([A-Za-z\\s]+)(?:\\*\\*)?([\\:\\?])?)\\s*"
   
   # Rules that define correct formatting
@@ -51,5 +13,10 @@ field_format:
     delimiter_inside_bold: true
     trim_whitespace: true
     
-  # Fuzzy matching threshold
-  fuzzy_threshold: 90
+  # Fuzzy matching threshold for semantic identification
+  fuzzy_threshold: 85
+
+# Legacy correction rules (kept for reference but not used by new system)
+# The field_format section above handles all these cases programmatically
+correction_rules_legacy:
+  note: "These explicit patterns are replaced by the principled field_format approach"

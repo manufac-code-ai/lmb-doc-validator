@@ -16,17 +16,19 @@ class FieldProcessor:
     def parse_field_components(self, text):
         """Extract field components using the principled pattern"""
         pattern = self.field_format.get('field_pattern', '')
-        match = re.match(pattern, text)
-        if not match:
+        
+        # First try to match just the header part (before any content)
+        header_match = re.match(r'^\s*((?:\*\*)?([A-Za-z\s]+)(?:\*\*)?([:\?]?))\s*', text)
+        if not header_match:
             return None
             
         return {
             'original': text,
-            'full_match': match.group(1),
-            'field_name': match.group(2),
-            'delimiter': match.group(3) or ':',
+            'header_only': header_match.group(1),  # Just the field header part
+            'field_name': header_match.group(2),
+            'delimiter': header_match.group(3) or ':',
             'has_bold': '**' in text,
-            'is_valid_structure': bool(match)
+            'is_valid_structure': True
         }
     
     def identify_field_semantic(self, field_name):

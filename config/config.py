@@ -24,7 +24,7 @@ VALIDATED_DIR = "validated"  # Subdirectory for validation results
 
 # Validation processing options
 AUTO_CORRECTION_ENABLED = True  # Default to no auto-correction
-ANALYZE_ONLY = True   # Only analyze, don't move/copy files
+ANALYZE_ONLY = False   # Only analyze, don't move/copy files
 MOVE_FILES = False     # When file operations occur, copy files (don't move them)
 STRICT_VALIDATION = False    # Default to normalized validation
 SHOW_VALID_REPORTS = False   # Whether to show valid reports in console output

@@ -9,7 +9,7 @@ document_types:
       - customer_poc
       - problem_description
       - work_performed
-      - resolution_status
+      - issue_resolved
       - next_steps
     
   pm_report:
@@ -17,9 +17,8 @@ document_types:
     description: "Regular scheduled maintenance report"
     required_fields:
       - date_of_service
-      - technician_name
+      - technician_name  
       - customer_poc
-      - equipment_serviced
-      - maintenance_performed
-      - issues_found
-      - next_maintenance_date
+      - work_description  # Accept either "description of service" OR "description of work performed"
+      - completion_status # Accept either "service completed" OR "issue resolved"
+      - next_steps

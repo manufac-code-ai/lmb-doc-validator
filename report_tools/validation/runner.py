@@ -5,6 +5,7 @@ import logging
 import config.config as config
 from report_tools.file_utils import setup_logger, find_markdown_files
 from report_tools.validation.processor import process_folder
+from pathlib import Path
 
 def run_validation(args):
     """Run the validation process with the provided arguments."""
@@ -66,40 +67,36 @@ def run_validation(args):
         
     # Run the validation
     valid, invalid, ignored_files, error_counter, word_stats, corrections = process_folder(
-        args.input, 
-        args.output, 
-        move_files=move_files,
-        analyze_only=analyze_only,
-        strict=strict,
-        show_valid=show_valid,
+        args.input,
+        output_base=args.output,
+        move_files=args.move,
+        analyze_only=args.analyze_only,
+        strict=args.strict,
+        show_valid=args.show_valid,
         auto_correct=auto_correct
     )
     
-    # Add double newline for better readability
-    print("\n\nProcessing complete! Valid: {}, Invalid: {}".format(valid, invalid))
+    # Count PM reports from the output directory
+    valid_pm_dir = Path(args.output) / config.VALIDATED_DIR / "valid PM"
+    valid_pm_count = 0
+    if valid_pm_dir.exists():
+        valid_pm_count = len(list(valid_pm_dir.glob('*.md')))
     
-    # Add summary of ignored files
-    if ignored_files > 0:
-        print(f"Note: {ignored_files} reports were explicitly excluded from validation")
+    valid_service_count = valid - valid_pm_count
+
+    # Updated console output
+    print(f"\nProcessing complete! Valid Service: {valid_service_count}, Valid PM: {valid_pm_count}, Invalid: {invalid}")
     
-    # Add summary of ignored directories
-    if ignored_count > 0:
-        print(f"Note: {ignored_count} files in excluded directories were not processed")
-        print(f"Excluded directories: {', '.join(config.IGNORED_DIRECTORIES)}")
+    if valid_service_count > 0:
+        print(f"Valid reports average length: {word_stats['valid']['mean']:.1f} words (range: {word_stats['valid']['min']} to {word_stats['valid']['max']} words)")
     
-    # Add a newline before word count statistics
-    print("")
-    
-    # Print word count statistics
-    if valid > 0:
-        print(f"Valid reports average length: {word_stats['valid']['average']:.1f} words (range: {word_stats['valid']['min']} to {word_stats['valid']['max']} words)")
     if invalid > 0:
-        print(f"Invalid reports average length: {word_stats['invalid']['average']:.1f} words (range: {word_stats['invalid']['min']} to {word_stats['invalid']['max']} words)")
+        print(f"Invalid reports average length: {word_stats['invalid']['mean']:.1f} words (range: {word_stats['invalid']['min']} to {word_stats['invalid']['max']} words)")
     
     # Add a newline before file references
     print("")
     
-    if valid + invalid > 0:
+    if valid_service_count + invalid > 0:
         print(f"See {config.SUMMARY_LOG} for details")
         print(f"Word count analysis in {config.WORD_COUNT_CSV}")
         print(f"Error frequency analysis in {config.ERROR_SUMMARY}")
