@@ -11,8 +11,8 @@ from report_tools.file_utils import find_markdown_files, get_ignored_reports
 from report_tools.validation.core import validate_report
 
 def process_folder(input_folder, output_base=config.OUTPUT_DIR, move_files=False, 
-                  report_only=config.DEFAULT_REPORT_ONLY, strict=config.STRICT_VALIDATION,
-                  show_valid=config.SHOW_VALID_REPORTS):
+                  analyze_only=config.ANALYZE_ONLY, strict=config.STRICT_VALIDATION,
+                  show_valid=config.SHOW_VALID_REPORTS, auto_correct=False):
     """
     Process markdown files and sort them into categories.
     
@@ -20,12 +20,13 @@ def process_folder(input_folder, output_base=config.OUTPUT_DIR, move_files=False
         input_folder: Path to folder containing markdown files
         output_base: Base folder name for output
         move_files: Whether to move files (True) or copy them (False)
-        report_only: If True, don't move/copy files, just analyze
+        analyze_only: If True, don't move/copy files, just analyze
         strict: Use strict validation
         show_valid: Show valid reports in console output
+        auto_correct: Whether to apply auto-correction
         
     Returns:
-        tuple: Stats for the processing run
+        tuple: Stats for the processing run including corrections made
     """
     # Find all markdown files, potentially in subdirectories
     markdown_files = find_markdown_files(input_folder)
@@ -62,6 +63,9 @@ def process_folder(input_folder, output_base=config.OUTPUT_DIR, move_files=False
     }
     file_word_counts = {}
     
+    # Add another counter inside the function:
+    total_corrections = 0
+    
     with open(config.SUMMARY_LOG, 'w', encoding='utf-8') as log:
         log.write("Report Validation Summary\n")
         log.write("=======================\n\n")
@@ -83,7 +87,7 @@ def process_folder(input_folder, output_base=config.OUTPUT_DIR, move_files=False
                 file_word_counts[file_path.name] = word_count
             
             # Validate the report
-            is_valid, error_codes = validate_report(file_path, strict=strict)
+            is_valid, error_codes, corrected_content = validate_report(file_path, strict=strict, auto_correct=auto_correct)
             
             # Store the file's error codes for summary
             file_errors[file_path.name] = error_codes
@@ -96,8 +100,8 @@ def process_folder(input_folder, output_base=config.OUTPUT_DIR, move_files=False
                 valid_files += 1
                 word_counts["valid"].append(word_count)
                 
-                # Only move/copy if not in report-only mode
-                if not report_only:
+                # Only move/copy if not in analyze-only mode
+                if not analyze_only:
                     destination = valid_dir / file_path.name
                     if move_files:
                         shutil.move(str(file_path), str(destination))
@@ -113,7 +117,7 @@ def process_folder(input_folder, output_base=config.OUTPUT_DIR, move_files=False
                 word_counts["invalid"].append(word_count)
                 
                 # Only move/copy if not in report-only mode
-                if not report_only:
+                if not analyze_only:
                     destination = invalid_dir / file_path.name
                     if move_files:
                         shutil.move(str(file_path), str(destination))
@@ -124,6 +128,28 @@ def process_folder(input_folder, output_base=config.OUTPUT_DIR, move_files=False
                 log.write(f"  Errors: {', '.join(error_codes)}\n")
                 # Use ERROR level for better visibility
                 logging.debug(f"INVALID: {file_path.name} - Errors: {error_codes}")
+            
+            # After validation, save corrected content if needed (around line 79):
+            if auto_correct and corrected_content and corrected_content != content:
+                # Count the correction
+                total_corrections += 1
+                
+                # If not in report-only mode, write corrected file directly
+                if not analyze_only:
+                    # Write corrected content when moving/copying
+                    with open(destination, 'w', encoding='utf-8') as f:
+                        f.write(corrected_content)
+                else:
+                    # Even in report-only mode, log that corrections were found
+                    logging.info(f"Corrections available for {file_path.name}")
+            else:
+                # Use normal copy/move if no corrections or auto-correct disabled
+                if not analyze_only:
+                    destination = valid_dir / file_path.name if is_valid else invalid_dir / file_path.name
+                    if move_files:
+                        shutil.move(str(file_path), str(destination))
+                    else:
+                        shutil.copy2(str(file_path), str(destination))
     
     # Calculate word count statistics
     word_stats = reporting.calculate_word_statistics(word_counts)
@@ -131,5 +157,5 @@ def process_folder(input_folder, output_base=config.OUTPUT_DIR, move_files=False
     # Generate reporting files
     reporting.write_summary_files(file_errors, file_word_counts, word_stats, error_counter)
     
-    # Return statistics for display
-    return valid_files, invalid_files, ignored_files, error_counter, word_stats
+    # Update the return value to include corrections (at end of function):
+    return valid_files, invalid_files, ignored_files, error_counter, word_stats, total_corrections

@@ -1,0 +1,25 @@
+# Document type definitions for validation
+document_types:
+  service_report:
+    name: "Service Report"
+    description: "Standard technical service call report"
+    required_fields:
+      - date_of_service
+      - technician_name
+      - customer_poc
+      - problem_description
+      - work_performed
+      - resolution_status
+      - next_steps
+    
+  pm_report:
+    name: "Preventative Maintenance Report"
+    description: "Regular scheduled maintenance report"
+    required_fields:
+      - date_of_service
+      - technician_name
+      - customer_poc
+      - equipment_serviced
+      - maintenance_performed
+      - issues_found
+      - next_maintenance_date

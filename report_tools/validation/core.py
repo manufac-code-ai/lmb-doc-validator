@@ -4,6 +4,8 @@ import os
 import re
 import logging
 from report_tools.validation_fields import REQUIRED_FIELDS, FIELD_ALTERNATIVES
+from report_tools.validation.auto_correction import auto_correct_document  # New import
+from report_tools.config_loader import get_field_definitions  # New import
 
 def normalize_markdown_content(content):
     """Normalize markdown content for consistent validation."""
@@ -18,29 +20,39 @@ def normalize_markdown_content(content):
     
     return content
 
-def validate_report(file_path, strict=False):
+def validate_report(file_path, strict=False, auto_correct=False):
     """
     Validate a single report for required structure.
     
     Args:
         file_path: Path to the markdown file
         strict: Whether to use strict field matching
+        auto_correct: Whether to apply auto-correction
         
     Returns:
-        tuple: (is_valid, list_of_error_codes)
+        tuple: (is_valid, list_of_error_codes, corrected_content)
     """
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
     except Exception as e:
-        return False, [f"FILE_ERROR:{str(e)}"]
+        return False, [f"FILE_ERROR:{str(e)}"], None
     
     # Normalize content for consistent validation
     content = normalize_markdown_content(content)
     
+    # Apply auto-correction if enabled
+    corrected_content = None
+    if auto_correct:
+        corrected_content, correction_count = auto_correct_document(content)
+        if correction_count > 0:
+            logging.info(f"Made {correction_count} auto-corrections to {file_path.name}")
+            # Use corrected content for validation
+            content = corrected_content
+    
     # Check for general structure issues
     if "**" not in content:
-        return False, ["UNSTRUCTURED_DOCUMENT"]
+        return False, ["UNSTRUCTURED_DOCUMENT"], corrected_content
     
     errors = []
     content_lower = content.lower()  # Convert content to lowercase for case-insensitive comparison
@@ -81,4 +93,4 @@ def validate_report(file_path, strict=False):
                 else:
                     errors.append(f"MISSING_FIELD:{field}")
     
-    return len(errors) == 0, errors
+    return len(errors) == 0, errors, corrected_content

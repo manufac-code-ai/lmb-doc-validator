@@ -2,6 +2,7 @@
 
 import os
 import logging
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 import config.config as config
 
@@ -23,21 +24,22 @@ def setup_logger(log_file=config.LOG_FILE, console_level=logging.WARNING):
     root_logger.setLevel(logging.DEBUG)  # Capture all logs to file
     
     # Clear any existing handlers
-    for handler in root_logger.handlers[:]:
-        root_logger.removeHandler(handler)
+    if root_logger.handlers:
+        for handler in root_logger.handlers:
+            root_logger.removeHandler(handler)
     
-    # File handler - logs everything to file
-    file_handler = logging.FileHandler(log_file)
-    file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    file_handler.setFormatter(file_formatter)
-    file_handler.setLevel(logging.DEBUG)
-    root_logger.addHandler(file_handler)
+    # Create file handler that overwrites the log each time
+    log_handler = logging.FileHandler(log_file, mode='w')
+    log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    log_handler.setFormatter(log_formatter)
     
-    # Console handler - only warnings and above by default
+    # Console handler (use the passed-in level)
     console_handler = logging.StreamHandler()
-    console_formatter = logging.Formatter('%(message)s')
-    console_handler.setFormatter(console_formatter)
+    console_handler.setFormatter(log_formatter)
     console_handler.setLevel(console_level)
+    
+    # Add handlers to logger
+    root_logger.addHandler(log_handler)
     root_logger.addHandler(console_handler)
     
     return root_logger

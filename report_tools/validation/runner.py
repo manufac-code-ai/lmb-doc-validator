@@ -14,14 +14,13 @@ def run_validation(args):
     # Setup logger
     setup_logger()
     
-    # Override recursive search if specified
-    recursive = not args.no_recursive if hasattr(args, 'no_recursive') else config.RECURSIVE_SEARCH
-    
-    # Override show valid setting if specified
-    show_valid = args.show_valid if hasattr(args, 'show_valid') else config.SHOW_VALID_REPORTS
-    
-    # Set config.RECURSIVE_SEARCH for this run
-    config.RECURSIVE_SEARCH = recursive
+    # Get settings from config
+    recursive = config.RECURSIVE_SEARCH
+    show_valid = config.SHOW_VALID_REPORTS
+    analyze_only = config.ANALYZE_ONLY
+    strict = config.STRICT_VALIDATION
+    auto_correct = config.AUTO_CORRECTION_ENABLED
+    move_files = config.MOVE_FILES  # Use the dedicated setting
     
     # Make sure input folder exists
     if not os.path.exists(args.input):
@@ -41,15 +40,23 @@ def run_validation(args):
     
     # Add a blank line before configuration info
     print("")
-    if args.strict:
+    if strict:
         print("Using strict validation (no normalization)")
     else:
         print("Using normalized validation (accepting alternate field formats)")
     
+    if auto_correct:
+        print("Auto-correction is enabled for field formatting issues")
+    
     # Add a blank line before processing mode
     print("")
-    if args.report_only:
-        print("Report-only mode: files will be analyzed but not moved/copied")
+    if analyze_only:
+        print("Analyze-only mode: files will be analyzed but not moved/copied")
+    else:
+        if move_files:
+            print("Processing mode: files will be moved to output folders")
+        else:
+            print("Processing mode: files will be copied to output folders")
     
     # Get total files including ignored directories
     ignored_count = 0
@@ -58,13 +65,14 @@ def run_validation(args):
         pass
         
     # Run the validation
-    valid, invalid, ignored_files, error_counter, word_stats = process_folder(
+    valid, invalid, ignored_files, error_counter, word_stats, corrections = process_folder(
         args.input, 
         args.output, 
-        move_files=args.move,
-        report_only=args.report_only,
-        strict=args.strict,
-        show_valid=show_valid
+        move_files=move_files,
+        analyze_only=analyze_only,
+        strict=strict,
+        show_valid=show_valid,
+        auto_correct=auto_correct
     )
     
     # Add double newline for better readability
@@ -105,6 +113,9 @@ def run_validation(args):
             print("\nTop issues found:")
             for error, count in sorted(error_counter.items(), key=lambda x: x[1], reverse=True)[:5]:
                 print(f"  {error}: {count} occurrences")
+    
+    if corrections and corrections > 0:
+        print(f"Auto-correction applied {corrections} formatting fixes")
     
     # Add final newline to separate from next terminal prompt
     print("")

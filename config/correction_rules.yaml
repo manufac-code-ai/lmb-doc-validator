@@ -1,0 +1,55 @@
+# Auto-correction rules for document formatting
+correction_rules:
+  missing_colon:
+    description: "Bold field name missing colon"
+    pattern: "**{field_name}**"
+    replacement: "**{field_name}:**"
+    priority: 1
+  
+  colon_outside_bold:
+    description: "Colon outside bold formatting"
+    pattern: "**{field_name}**:"
+    replacement: "**{field_name}:**"
+    priority: 2
+  
+  whitespace_after_header:
+    description: "Extra whitespace after field header"
+    pattern: "**{field_name}:**  "
+    replacement: "**{field_name}:** "
+    priority: 3
+  
+  question_outside_bold:
+    description: "Question mark outside bold formatting"
+    pattern: "**{field_name}**?"
+    replacement: "**{field_name}?**"
+    priority: 4
+  
+  missing_asterisks:
+    description: "Missing bold formatting entirely"
+    pattern: "{field_name}:"
+    replacement: "**{field_name}:**"
+    priority: 5
+
+  lowercase_field:
+    description: "Field name in lowercase"
+    pattern: "**{lowercase_field_name}:**"
+    replacement: "**{field_name}:**"
+    priority: 6
+
+# Field formatting definition - fundamental approach
+field_format:
+  # Standard correct format for fields
+  standard_format: "**{field_name}{delimiter}**"
+  
+  # Field identification pattern
+  field_pattern: "^\\s*((?:\\*\\*)?([A-Za-z\\s]+)(?:\\*\\*)?([\\:\\?])?)\\s*"
+  
+  # Rules that define correct formatting
+  rules:
+    # Field formatting requirements
+    bold_required: true
+    delimiter_inside_bold: true
+    trim_whitespace: true
+    
+  # Fuzzy matching threshold
+  fuzzy_threshold: 90
