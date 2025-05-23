@@ -5,6 +5,7 @@ Field matching implementation using tiered approach:
 3. Fuzzy matching (as fallback)
 """
 import re
+import logging
 from rapidfuzz import fuzz
 from report_tools.config_loader import get_field_definitions
 
@@ -35,18 +36,68 @@ def direct_match(field_text, field_definitions=None):
         if field_text == field_def['canonical']:
             return field_id, field_def['canonical']
         
-        # Check patterns
+        # Check patterns (for backward compatibility)
         if 'patterns' in field_def:
             for pattern in field_def['patterns']:
                 if field_text == pattern:
+                    return field_id, field_def['canonical']
+        
+        # Generate explicit matches from semantic alternatives
+        if 'semantic_alternatives' in field_def:
+            # Generate variations from each semantic alternative
+            for alt in field_def['semantic_alternatives']:
+                # Both bold forms
+                bold_inside = f"**{alt}:**"
+                bold_outside = f"**{alt}**:"
+                
+                # Question mark variations if specified
+                if field_def.get('question_mark', False):
+                    bold_inside_q = f"**{alt}?**"
+                    bold_outside_q = f"**{alt}**?"
+                    if field_text in [bold_inside_q, bold_outside_q]:
+                        return field_id, field_def['canonical']
+                
+                # Direct match against generated patterns
+                if field_text in [bold_inside, bold_outside]:
                     return field_id, field_def['canonical']
     
     return None, None
 
 
+def generate_variations(base_text, field_def):
+    """
+    Generate all possible variations of a field based on flags
+    
+    Args:
+        base_text: Base text to generate variations from
+        field_def: Field definition with flags
+        
+    Returns:
+        list: All possible variations
+    """
+    variations = [base_text]
+    
+    # Handle plurals if allowed
+    if field_def.get('allow_plural', False):
+        if base_text.endswith('y'):
+            # Handle y -> ies pluralization
+            variations.append(base_text[:-1] + 'ies')
+        else:
+            # Simple pluralization
+            variations.append(base_text + 's')
+    
+    # Handle capitalization variations if allowed
+    if field_def.get('allow_capital', False):
+        # Add capitalized versions
+        for var in list(variations):  # Use list() to avoid modifying during iteration
+            variations.append(var.capitalize())
+    
+    return variations
+
+
 def pattern_match(field_text, field_definitions=None):
     """
-    Use regex patterns to match fields with predictable variations
+    Use pattern matching for field identification with semantic alternatives
     
     Args:
         field_text: The field text to match
@@ -58,33 +109,53 @@ def pattern_match(field_text, field_definitions=None):
     if field_definitions is None:
         field_definitions = get_field_definitions()
     
-    # Convert patterns to regex patterns
+    # Strip formatting for content comparison
+    clean_text = re.sub(r'\*\*', '', field_text).strip()
+    clean_text = re.sub(r'[\:\?]', '', clean_text).strip()
+    
     for field_id, field_def in field_definitions.items():
-        # Check patterns
+        # First check canonical form
+        canonical = field_def['canonical']
+        clean_canonical = re.sub(r'\*\*', '', canonical).strip()
+        clean_canonical = re.sub(r'[\:\?]', '', clean_canonical).strip()
+        
+        # Build variations based on field properties
+        variations = [clean_canonical.lower()]
+        
+        # Add variations from semantic alternatives
+        if 'semantic_alternatives' in field_def:
+            for alt in field_def['semantic_alternatives']:
+                # Generate all variations based on flags
+                alt_variations = generate_variations(alt.lower(), field_def)
+                variations.extend(alt_variations)
+        
+        # Legacy support for patterns
         if 'patterns' in field_def:
             for pattern in field_def['patterns']:
-                # Convert simple string patterns to regex
-                # This handles * as literal asterisks in markdown
-                pattern_regex = pattern.replace('*', '\\*').replace('?', '\\?')
-                
-                # For plurals like "problem(s)"
-                pattern_regex = pattern_regex.replace('[[s]]', '(?:s)?')
-                
-                # Now it's a proper regex pattern
-                if re.match(f"^{pattern_regex}$", field_text):
-                    return field_id, field_def['canonical']
+                pattern_clean = re.sub(r'\*\*', '', pattern).strip()
+                pattern_clean = re.sub(r'[\:\?]', '', pattern_clean).strip()
+                variations.append(pattern_clean.lower())
+        
+        # Check against all variations
+        if clean_text.lower() in variations:
+            return field_id, field_def['canonical']
+        
+        # Additional regex matching for special cases
+        for var in variations:
+            if re.match(f'^{re.escape(var)}s?$', clean_text.lower()):
+                return field_id, field_def['canonical']
     
     return None, None
 
 
-def fuzzy_match(field_text, threshold=90, field_definitions=None):
+def fuzzy_match(field_text, field_definitions=None, threshold=90):
     """
-    Fallback fuzzy matching for field names
+    Use fuzzy matching for field identification with smart preprocessing
     
     Args:
         field_text: The field text to match
-        threshold: Minimum similarity score (0-100)
         field_definitions: Optional field definitions (loaded if not provided)
+        threshold: Similarity threshold (0-100)
         
     Returns:
         tuple: (field_id, canonical_form) or (None, None) if no match
@@ -93,24 +164,51 @@ def fuzzy_match(field_text, threshold=90, field_definitions=None):
         field_definitions = get_field_definitions()
     
     best_match = None
-    best_score = 0
     best_field_id = None
+    best_score = 0
     
-    # Strip formatting for better comparison
-    clean_field_text = re.sub(r'[\*\:]', '', field_text).strip()
+    # IMPROVED: Preserve formatting signals instead of stripping them
+    # This helps recognize proper field formatting in the matching
+    clean_field_text = field_text
+    # Normalize whitespace
+    clean_field_text = re.sub(r'\s+', ' ', clean_field_text).strip()
+    # Mark bold tags with special tokens to preserve in matching
+    has_bold_start = '**' in clean_field_text
+    clean_field_text = re.sub(r'\*\*', 'BOLD', clean_field_text)
     
+    # Check for the presence of colons or question marks (formatting signals)
+    has_delimiter = ':' in clean_field_text or '?' in clean_field_text
+    
+    logging.debug(f"Fuzzy matching: '{field_text}' → '{clean_field_text}'")
+    
+    # Check each field definition
     for field_id, field_def in field_definitions.items():
-        # Get clean canonical text
         canonical = field_def['canonical']
-        clean_canonical = re.sub(r'[\*\:]', '', canonical).strip()
         
-        # Calculate similarity
-        score = fuzz.ratio(clean_field_text.lower(), clean_canonical.lower())
+        # Process canonical form with the same transformations
+        clean_canonical = canonical
+        clean_canonical = re.sub(r'\s+', ' ', clean_canonical).strip()
+        canonical_has_bold = '**' in clean_canonical
+        clean_canonical = re.sub(r'\*\*', 'BOLD', clean_canonical)
         
-        if score > best_score:
-            best_score = score
-            best_match = canonical
+        # Basic content similarity
+        base_score = fuzz.ratio(clean_field_text.lower(), clean_canonical.lower())
+        
+        # IMPROVED: Apply formatting bonus when formatting signals match
+        format_bonus = 0
+        if has_bold_start == canonical_has_bold:
+            format_bonus += 5  # Bonus for matching bold formatting
+        if has_delimiter:
+            format_bonus += 5  # Bonus for having a delimiter
+
+        # Calculate adjusted score
+        adjusted_score = min(base_score + format_bonus, 100)
+        
+        if adjusted_score > best_score:
+            best_score = adjusted_score
             best_field_id = field_id
+            best_match = canonical
+            logging.debug(f"New best match: '{canonical}' (score: {base_score} + {format_bonus} = {adjusted_score})")
     
     # Only return if score is above threshold
     if best_score >= threshold:
@@ -119,32 +217,29 @@ def fuzzy_match(field_text, threshold=90, field_definitions=None):
     return None, None
 
 
-def identify_field(field_text, fuzzy_threshold=90):
+def identify_field(field_text):
     """
-    Identify a field using tiered matching approach
+    Identify field using tiered matching approach
     
     Args:
-        field_text: The field text to match
-        fuzzy_threshold: Threshold for fuzzy matching
+        field_text: The field text to identify
         
     Returns:
-        tuple: (field_id, canonical_form) or (None, None) if no match
+        tuple: (field_id, canonical_form) or (None, None) if not identified
     """
+    # Load field definitions once
     field_definitions = get_field_definitions()
     
-    # Tier 1: Direct match
+    # Try direct match first (fastest)
     field_id, canonical = direct_match(field_text, field_definitions)
     if field_id:
         return field_id, canonical
     
-    # Tier 2: Pattern match
+    # Try pattern match next
     field_id, canonical = pattern_match(field_text, field_definitions)
     if field_id:
         return field_id, canonical
     
-    # Tier 3: Fuzzy match (fallback)
-    field_id, canonical = fuzzy_match(field_text, fuzzy_threshold, field_definitions)
-    if field_id:
-        return field_id, canonical
-    
-    return None, None
+    # Finally try fuzzy match (most flexible)
+    field_id, canonical = fuzzy_match(field_text, field_definitions)
+    return field_id, canonical

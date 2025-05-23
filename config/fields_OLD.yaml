@@ -1,0 +1,131 @@
+# Field definitions and pattern matching
+fields:
+  date_of_service:
+    display: "Date of service"
+    canonical: "**Date of service:**"
+    patterns:
+      - "**Service date:**"
+      - "**Date:**"
+      - "**Date of visit:**"
+      - "**Date of service**:"
+      - "**Service date**:"
+      - "**Date**:"
+      - "**Date of visit**:"
+  
+  technician_name:
+    display: "Technician name"
+    canonical: "**Technician name:**"
+    patterns:
+      - "**Technician:**"
+      - "**Tech name:**"
+      - "**Service technician:**"
+      - "**Technician name**:"
+      - "**Technician**:"
+      - "**Tech name**:"
+      - "**Service technician**:"
+  
+  customer_poc:
+    display: "Customer point of contact"
+    canonical: "**Customer point of contact:**"
+    patterns:
+      - "**Customer points of contact:**"
+      - "**Client contact:**"
+      - "**Contact person:**"
+      - "**Point of contact:**"
+      - "**Customer contact:**"
+      - "**Customer point of contact**:"
+      - "**Customer points of contact**:"
+      - "**Client contact**:"
+      - "**Contact person**:"
+      - "**Point of contact**:"
+      - "**Customer contact**:"
+  
+  problem_description:
+    display: "Description of problem"
+    canonical: "**Description of problem:**"
+    patterns:
+      - "**Description of problems:**"
+      - "**Descriptions of problem:**"
+      - "**Descriptions of problems:**"
+      - "**Description of problems/requests:**"
+      - "**Problems and requests:**"
+      - "**Issues reported:**"
+      - "**Problems encountered:**"
+      - "**Service request:**"
+      - "**Reported issue(s):**"
+  
+  work_performed:
+    display: "Description of work performed"
+    canonical: "**Description of work performed:**"
+    patterns:
+      - "**Work performed:**"
+      - "**Service performed:**"
+      - "**Actions taken:**"
+      - "**Work completed:**"
+      - "**Description of work performed**:"
+      - "**Work performed**:"
+      - "**Service performed**:"
+      - "**Actions taken**:"
+      - "**Work completed**:"
+  
+  resolution_status:
+    display: "Issue resolved?"
+    canonical: "**Issue resolved?**"
+    patterns:
+      - "**Issues resolved?**"
+      - "**Issue(s) resolved?**"
+      - "**Problem resolved?**"
+      - "**Resolution status:**"
+      - "**Resolved?**"
+      - "**Issue resolved**?"
+      - "**Issues resolved**?"
+      - "**Issue(s) resolved**?"
+      - "**Problem resolved**?"
+  
+  next_steps:
+    display: "Next steps"
+    canonical: "**Next steps?**"
+    patterns:
+      - "**Next steps:**"
+      - "**Future actions:**"
+      - "**Follow-up required:**"
+      - "**Follow-up actions:**"
+      - "**Recommended next steps:**"
+      - "**Next steps**?"
+      - "**Future actions**?"
+      - "**Follow-up required**?"
+      - "**Follow-up actions**?"
+      - "**Recommended next steps**?"
+  
+  # PM Report specific fields
+  equipment_serviced:
+    display: "Equipment serviced"
+    canonical: "**Equipment serviced:**"
+    patterns:
+      - "**Equipment:**"
+      - "**Systems serviced:**"
+      - "**Devices maintained:**"
+  
+  maintenance_performed:
+    display: "Maintenance performed"
+    canonical: "**Maintenance performed:**"
+    patterns:
+      - "**Maintenance tasks:**"
+      - "**Preventative maintenance:**"
+      - "**PM tasks completed:**"
+  
+  issues_found:
+    display: "Issues found"
+    canonical: "**Issues found:**"
+    patterns:
+      - "**Problems discovered:**"
+      - "**Maintenance issues:**"
+      - "**Noted concerns:**"
+  
+  next_maintenance_date:
+    display: "Next maintenance date"
+    canonical: "**Next maintenance date:**"
+    patterns:
+      - "**Next PM date:**"
+      - "**Schedule next maintenance:**"
+      - "**Next service:**"
