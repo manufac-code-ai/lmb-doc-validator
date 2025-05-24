@@ -1,0 +1,9 @@
+# Format: newer_filename|legacy_filename|status
+220324-25 EOU Theater PM+.md|220324-25 EOU Theater PM & Repair1.md|MATCH
+230331 MView Vanc Band rm mixer1.md|230331 MVHS Band rm mixer1.md|MATCH
+230531 Abcam Eug - Cafe cam img flip.md|230531 Abcam Eug - Cafe cam img flip v1.md|MATCH
+231106 Abcam Eug - Cafe Projector RMC.md|231106 Abcam Eug - Cafe Projector RMC PRE01.md|MATCH
+220405 Mentor PM rpt 01.md|220405 MentorPM rpt 01.md|MATCH
+220601 CMHosp Astoria PM.md|220601 CMHosp Astoria.md|MATCH
+230206 Abcam Eug - Cafe Mics.md|230206 Abcam Eug - Cafe Mics cGPT1.md|MATCH
+230331 MView Vanc Theater Stagebox1.md|x1.md|NO_MATCH

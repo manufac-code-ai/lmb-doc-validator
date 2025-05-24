@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-Convert Word documents (.docx) to Markdown (.md) files.
+Convert Word documents (.docx) to Markdown (.md) files with line spacing cleanup.
 """
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -18,19 +19,39 @@ def install_pandoc_python():
         import pypandoc
         return True
 
+def clean_markdown_spacing(content):
+    """
+    Clean up excessive line spacing in markdown content.
+    Limits vertical spacing to maximum of one blank line (two newlines total).
+    """
+    # Normalize line endings to \n (handles \r\n, \r, or \n)
+    content = content.replace('\r\n', '\n').replace('\r', '\n')
+    
+    # Replace any sequence of 3 or more newlines with exactly 2 newlines
+    # This gives us a maximum of one blank line between content
+    content = re.sub(r'\n{3,}', '\n\n', content)
+    
+    # Clean up any trailing whitespace on lines
+    lines = content.split('\n')
+    cleaned_lines = [line.rstrip() for line in lines]
+    content = '\n'.join(cleaned_lines)
+    
+    return content
+
 def convert_docx_to_markdown():
-    """Convert all .docx files to markdown"""
+    """Convert all .docx files to markdown with line spacing cleanup"""
     
     # Import after potential installation
     import pypandoc
     
-    # Define paths
-    source_folder = Path('/Users/stevenbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_SRB iCloud/Projects/SOFTWARE dev SUPPORT projects/Ai MASTER CONTROL/Ai Projects, Effort/Ai_pj - sb_Dv_Service_Reports/jobGPT - convert sb svc rpts to js experience for res/gpt pj - rpts2resume 1 collect reports/docx')
+    # Get directories relative to script location
+    helper_dir = Path(__file__).parent.absolute()
+    source_folder = helper_dir / "_h_INPUT"
+    output_folder = helper_dir / "_h_OUTPUT"
     
-    output_folder = Path('/Users/stevenbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_SRB iCloud/Projects/SOFTWARE dev SUPPORT projects/Ai MASTER CONTROL/Ai Projects, Effort/Ai_pj - sb_Dv_Service_Reports/jobGPT - convert sb svc rpts to js experience for res/gpt pj - rpts2resume 1 collect reports/docx_OUT')
-    
-    # Create output folder if it doesn't exist
-    output_folder.mkdir(parents=True, exist_ok=True)
+    # Create directories if they don't exist
+    source_folder.mkdir(exist_ok=True)
+    output_folder.mkdir(exist_ok=True)
     
     # Find all .docx files
     docx_files = list(source_folder.glob('*.docx'))
@@ -40,6 +61,7 @@ def convert_docx_to_markdown():
         return
     
     print(f"Found {len(docx_files)} Word documents to convert")
+    print("Will clean up excessive line spacing during conversion")
     
     # Track results
     converted_count = 0
@@ -52,15 +74,21 @@ def convert_docx_to_markdown():
             md_filename = docx_file.stem + '.md'
             output_path = output_folder / md_filename
             
-            # Convert using pypandoc
-            output = pypandoc.convert_file(
+            # Convert using pypandoc to string first (not directly to file)
+            markdown_content = pypandoc.convert_file(
                 str(docx_file), 
                 'markdown',
-                outputfile=str(output_path),
                 extra_args=['--wrap=none', '--extract-media=.']
             )
             
-            print(f"✓ Converted: {docx_file.name} → {md_filename}")
+            # Clean up the line spacing
+            cleaned_content = clean_markdown_spacing(markdown_content)
+            
+            # Write the cleaned content to file
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write(cleaned_content)
+            
+            print(f"✓ Converted & cleaned: {docx_file.name} → {md_filename}")
             converted_count += 1
             
         except Exception as e:
@@ -75,6 +103,7 @@ def convert_docx_to_markdown():
     
     if converted_count > 0:
         print(f"\nConverted files are in: {output_folder}")
+        print("Line spacing has been normalized (max 1 blank line between sections)")
 
 def check_pandoc():
     """Check if pandoc is installed system-wide"""
@@ -85,8 +114,8 @@ def check_pandoc():
         return False
 
 if __name__ == "__main__":
-    print("Word to Markdown Converter")
-    print("=" * 40)
+    print("Word to Markdown Converter with Line Cleanup")
+    print("=" * 50)
     
     # Check for pandoc
     if not check_pandoc():
