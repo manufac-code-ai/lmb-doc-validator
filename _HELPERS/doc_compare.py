@@ -1,7 +1,24 @@
 import os
 import re
+import sys
 from pathlib import Path
 from datetime import datetime
+
+# Add parent directory to path to import config
+parent_dir = Path(__file__).parent.parent.absolute()
+sys.path.insert(0, str(parent_dir))
+
+# Import local configuration
+try:
+    from config.config_loc import (
+        DOC_COMPARE_NEWER_BASE,
+        DOC_COMPARE_LEGACY_BASE,
+        DOC_COMPARE_NEWER_FOLDERS
+    )
+except ImportError:
+    print("Error: Local configuration file not found.")
+    print("Please create config/config_loc.py with DOC_COMPARE paths defined.")
+    sys.exit(1)
 
 # ========================================
 # CONFIGURATION - Adjust these settings
@@ -56,19 +73,18 @@ def extract_date_from_filename(filename):
     return None, name_no_ext
 
 def get_file_lists():
-    """Get lists of newer and legacy files using actual directory paths"""
+    """Get lists of newer and legacy files using paths from local config"""
     
-    # Define paths
-    newer_base = "/Users/stevenbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_SRB iCloud/Projects/SOFTWARE dev SUPPORT projects/Ai MASTER CONTROL/Ai Projects, Effort/Ai_pj - sb_Dv_Service_Reports/jobGPT - convert sb svc rpts to js experience for res/gpt pj - rpts2resume 1 collect reports"
-    
-    legacy_base = "/Users/stevenbrown/Documents_SRB (local)/DIVERSIFIED FILES srb/Dv 1 - FST/Dv FST 3 - Service Tickets"
+    # Use paths from local config
+    newer_base = DOC_COMPARE_NEWER_BASE
+    legacy_base = DOC_COMPARE_LEGACY_BASE
     
     # Collect newer files
     newer_files = []
     newer_path = Path(newer_base)
     
-    # Look in main folder and subfolders
-    for folder_name in ['250523 srb Service Reports master', '250523 srb Service Reports master OTHER']:
+    # Look in configured folders
+    for folder_name in DOC_COMPARE_NEWER_FOLDERS:
         folder_path = newer_path / folder_name
         if folder_path.exists():
             # Recursively find all .md files
@@ -246,9 +262,9 @@ def find_matches(newer_files, legacy_files):
 def generate_report(matches, newer_count, legacy_count):
     """Generate a detailed report of the matching results"""
     
-    # Get base directories for path display
-    newer_base_dir = "/Users/stevenbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_SRB iCloud/Projects/SOFTWARE dev SUPPORT projects/Ai MASTER CONTROL/Ai Projects, Effort/Ai_pj - sb_Dv_Service_Reports/jobGPT - convert sb svc rpts to js experience for res/gpt pj - rpts2resume 1 collect reports"
-    legacy_base_dir = "/Users/stevenbrown/Documents_SRB (local)/DIVERSIFIED FILES srb/Dv 1 - FST/Dv FST 3 - Service Tickets"
+    # Get base directories from config for path display
+    newer_base_dir = DOC_COMPARE_NEWER_BASE
+    legacy_base_dir = DOC_COMPARE_LEGACY_BASE
     
     report_lines = []
     report_lines.append("# File Matching Report")

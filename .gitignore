@@ -2,17 +2,33 @@
 .venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
 # OS files
 .DS_Store
+Thumbs.db
 
-# Output directories
+# Generated directories (auto-created by scripts)
 _out/
 _logs/
+zz_validation_output/
 
-# Configuration files (generally user-specific)
-# config/org_config.md
+# Personal workflow helpers (entire directory)
+_HELPERS/
+
+# Configuration files (user-specific paths)
 config/config_loc.py
 
-# Logs
-_logs/*.log
+# Generated reports and temporary files
+validation_summary.txt
+error_frequency.csv
+word_count_analysis.csv
+rare_errors.csv
+temp_*.py
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
