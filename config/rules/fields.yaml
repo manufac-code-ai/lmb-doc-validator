@@ -1,0 +1,79 @@
+# Field definitions for document validation - Example Configuration
+fields:
+  date_of_work:
+    display: "Date of work"
+    canonical: "**Date of work:**"
+    semantic_alternatives:
+      - "Work date"
+      - "Date"
+      - "Date performed"
+    
+  author_name:
+    display: "Author name"
+    canonical: "**Author name:**"
+    semantic_alternatives:
+      - "Author"
+      - "Performed by"
+      - "Staff member"
+  
+  client_contact:
+    display: "Client contact"
+    canonical: "**Client contact:**"
+    semantic_alternatives:
+      - "Contact person"
+      - "Point of contact"
+      - "Client representative"
+    allow_plural: true
+  
+  issue_description:
+    display: "Issue description"
+    canonical: "**Issue description:**"
+    semantic_alternatives:
+      - "Problems reported"
+      - "Work request"
+      - "Requirements"
+    allow_plural: true
+
+  work_performed:
+    display: "Work performed"
+    canonical: "**Work performed:**"
+    semantic_alternatives:
+      - "Actions taken"
+      - "Work completed"
+      - "Tasks completed"
+  
+  status_resolved:
+    display: "Status resolved"
+    canonical: "**Status resolved?**"
+    semantic_alternatives:
+      - "Issue resolved"
+      - "Work completed"
+      - "Task finished"
+    question_mark: true
+  
+  next_steps:
+    display: "Next steps"
+    canonical: "**Next steps?**"
+    semantic_alternatives:
+      - "Future actions"
+      - "Follow-up required"
+      - "Recommended actions"
+    question_mark: true
+
+  # MAINTENANCE-SPECIFIC FIELDS
+  work_description:
+    display: "Work description"
+    canonical: "**Work description:**"
+    semantic_alternatives:
+      - "Type of work"
+      - "Maintenance type"
+      - "Service description"
+  
+  completion_status:
+    display: "Completion status"
+    canonical: "**Completion status?**"
+    semantic_alternatives:
+      - "Work completed"
+      - "Task finished"
+      - "Status"
+    question_mark: true

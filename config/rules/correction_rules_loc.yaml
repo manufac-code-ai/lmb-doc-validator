@@ -1,0 +1,22 @@
+# Auto-correction rules for document formatting - Principled Approach
+field_format:
+  # Standard correct format for fields
+  standard_format: "**{field_name}{delimiter}**"
+  
+  # Field identification pattern - captures any field-like text
+  field_pattern: "^\\s*((?:\\*\\*)?([A-Za-z\\s]+)(?:\\*\\*)?([\\:\\?])?)\\s*"
+  
+  # Rules that define correct formatting
+  rules:
+    # Field formatting requirements
+    bold_required: true
+    delimiter_inside_bold: true
+    trim_whitespace: true
+    
+  # Fuzzy matching threshold for semantic identification
+  fuzzy_threshold: 85
+
+# Legacy correction rules (kept for reference but not used by new system)
+# The field_format section above handles all these cases programmatically
+correction_rules_legacy:
+  note: "These explicit patterns are replaced by the principled field_format approach"

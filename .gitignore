@@ -19,6 +19,7 @@ _HELPERS/
 
 # Configuration files (user-specific paths)
 config/config_loc.py
+config/*_loc.yaml
 
 # Generated reports and temporary files
 validation_summary.txt

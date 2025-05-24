@@ -1,0 +1,24 @@
+# Document type definitions for validation
+document_types:
+  technical_report:
+    name: "Technical Report"
+    description: "Standard technical work or project report"
+    required_fields:
+      - date_of_work
+      - author_name
+      - client_contact
+      - issue_description
+      - work_performed
+      - status_resolved
+      - next_steps
+    
+  maintenance_report:
+    name: "Maintenance Report"  
+    description: "Scheduled maintenance or inspection documentation"
+    required_fields:
+      - date_of_work
+      - author_name  
+      - client_contact
+      - work_description
+      - completion_status
+      - next_steps

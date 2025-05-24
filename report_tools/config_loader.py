@@ -35,7 +35,7 @@ def get_config_dir():
 def load_document_types():
     """Load document type definitions"""
     config_dir = get_config_dir()
-    return load_yaml_config(config_dir / 'document_types.yaml')
+    return load_yaml_config(config_dir / 'doc_types.yaml')
 
 
 def load_field_definitions():

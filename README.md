@@ -96,69 +96,77 @@ python validate.py --strict
 
 ## Configuration
 
-The validator uses YAML configuration files to define document structures and validation rules:
+### Local Paths (Optional)
 
-### Document Types (`config/document_types.yaml`)
+To use custom source and output paths, create `config/config_loc.py`:
+
+```python
+# Local source directory
+SOURCE_DIR = "/path/to/your/markdown/files"
+
+# Optional: Custom output directory (defaults to "_out")
+OUTPUT_DIR = "/path/to/your/output"
+```
+
+This file is automatically ignored by git to keep your local paths private.
+
+### Document Structure Configuration
+
+The validator uses YAML configuration files in `config/rules/` to define document structures:
+
+### Document Types (`config/rules/doc_types.yaml`)
 
 Defines the categories of documents and their expected field sets:
 
 ```yaml
 document_types:
-  service_report:
-    display_name: "Service Report"
+  technical_report:
+    name: "Technical Report"
+    description: "Standard technical work or project report"
     required_fields:
-      - client
-      - date
-      - technician
-      - problem_description
-      - resolution
-
-  pm_report:
-    display_name: "PM Report"
-    required_fields:
-      - client
-      - date
-      - technician
-      - maintenance_performed
-      - recommendations
+      - date_of_work
+      - author_name
+      - client_contact
+      - issue_description
+      - work_performed
+      - status_resolved
+      - next_steps
 ```
 
-### Field Definitions (`config/fields.yaml`)
+### Field Definitions (`config/rules/fields.yaml`)
 
 Configures field names, aliases, and validation patterns:
 
 ```yaml
-canonical_fields:
-  client:
-    aliases: ["customer", "company", "organization"]
-    pattern: "**Client:**"
+fields:
+  date_of_work:
+    display: "Date of work"
+    canonical: "**Date of work:**"
+    semantic_alternatives:
+      - "Work date"
+      - "Date"
+      - "Date performed"
 
-  date:
-    aliases: ["service_date", "visit_date"]
-    pattern: "**Date:**"
-
-  technician:
-    aliases: ["tech", "engineer", "service_tech"]
-    pattern: "**Technician:**"
+  author_name:
+    display: "Author name"
+    canonical: "**Author name:**"
+    semantic_alternatives:
+      - "Author"
+      - "Performed by"
+      - "Staff member"
 ```
 
-### Correction Rules (`config/correction_rules.yaml`)
+### Correction Rules (`config/rules/correction_rules.yaml`)
 
 Defines automatic formatting corrections:
 
 ```yaml
-correction_rules:
-  bold_formatting:
-    enabled: true
-    fix_missing_asterisks: true
-
-  field_delimiters:
-    enabled: true
-    ensure_colon_after_field: true
-
-  whitespace:
-    enabled: true
-    normalize_line_breaks: true
+field_format:
+  standard_format: "**{field_name}{delimiter}**"
+  rules:
+    bold_required: true
+    delimiter_inside_bold: true
+    trim_whitespace: true
 ```
 
 ### Directory Exclusions (`config/val_dir_ignore.txt`)
@@ -166,11 +174,8 @@ correction_rules:
 Lists directories to skip during processing:
 
 ```
-.git
-.vscode
-temp
-backup
-archive
+_PM Reports
+_Diagnostic and Assist
 ```
 
 ## Output Structure
@@ -203,7 +208,7 @@ This validator is configured for a specific technical report format. To adapt it
 
 ### 1. Define Your Document Types
 
-Edit `config/document_types.yaml` to match your document categories:
+Edit `config/doc_types.yaml` to match your document categories:
 
 ```yaml
 document_types:
